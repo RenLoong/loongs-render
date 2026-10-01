@@ -324,6 +324,44 @@ t('cache key: code + platform + fingerprint + version', function () use ($regist
     ok(CacheKey::of($def, ClientInfo::pc(), 'a') !== CacheKey::of($def, ClientInfo::pc(), 'b'), 'fingerprint');
 });
 
+t('table tree / pagination(false) / notice', function () use ($registry, $pcCtx): void {
+    $t = Table::make('部门')->api('/a/depts')->tree()->notice('来源：{files} · 版本 {hash}', '/a/sources')
+        ->columns([Column::text('name', '名称'), Column::text('leader', '负责人')]);
+    $b = $t->toArray(rc());
+    $b = $b['body'] ?? $b;
+    eq(['children' => 'children', 'expanded' => true], $b['tree']);
+    eq(false, $b['pagination']);
+    ok(!isset($b['pageSizes']), 'no pageSizes for a tree');
+    eq(['message' => '来源：{files} · 版本 {hash}', 'api' => '/a/sources', 'type' => 'info'], $b['notice']);
+    $b2 = Table::make('m')->api('/a')->tree('items', 'leader', false)->notice('只读', type: 'warning')
+        ->columns([Column::text('name', '名称'), Column::text('leader', '负责人')])->toArray(rc());
+    $b2 = $b2['body'] ?? $b2;
+    eq(['children' => 'items', 'column' => 'leader', 'expanded' => false], $b2['tree']);
+    eq(['message' => '只读', 'type' => 'warning'], $b2['notice']);
+    $flat = Table::make('f')->api('/a')->paginate(false)->columns([Column::text('a', 'A')])->toArray(rc());
+    $flat = $flat['body'] ?? $flat;
+    eq(false, $flat['pagination']);
+    ok(!isset($flat['tree']) && !isset($flat['pageSizes']), 'flat full list');
+    $paged = Table::make('p')->api('/a')->columns([Column::text('a', 'A')])->toArray(rc());
+    $paged = $paged['body'] ?? $paged;
+    ok(!isset($paged['pagination']) && !isset($paged['tree']) && !isset($paged['notice']) && isset($paged['pageSizes']), 'default paged table unchanged');
+    throws(InvalidDefinition::class, fn () => Table::make('t')->api('/a')->tree()->paginate(), 'never paginated');
+    throws(InvalidDefinition::class, fn () => Table::make('t')->api('/a')->tree('kids', 'nope')->columns([Column::text('a', 'A')])->toArray(rc()), 'tree column nope');
+    throws(InvalidDefinition::class, fn () => Table::make('t')->notice('x', '//evil'), 'relative path');
+    throws(InvalidDefinition::class, fn () => Table::make('t')->notice('x', type: 'fatal'), 'notice type');
+    throws(InvalidDefinition::class, fn () => Table::make('t')->notice('{a; b}'), 'malformed');
+    throws(InvalidDefinition::class, fn () => Table::make('t')->tree('bad name'), 'invalid field name');
+    $v = new SchemaValidator();
+    $good = $registry->render('admin.system.admins', $pcCtx);
+    $good['body'] = array_diff_key($good['body'], ['pageSizes' => 1]) + ['pagination' => false, 'tree' => ['children' => 'children', 'expanded' => true], 'notice' => ['message' => 'm', 'api' => '/a', 'type' => 'info']];
+    eq([], $v->validate($good));
+    $bad = $good;
+    $bad['body']['pagination'] = true;
+    $bad['body']['tree'] = ['children' => 'c'];
+    $bad['body']['notice']['type'] = 'fatal';
+    eq(3, count($v->validate($bad)), implode(' | ', $v->validate($bad)));
+});
+
 // ---------------------------------------------------------------- form
 t('form PC: sections, submit per mode, policy readonly/masked/hidden', function () use ($registry, $all): void {
     $policy = new FieldMap(['admins.salary' => FieldAccess::Readonly, 'admins.mobile' => FieldAccess::Masked, 'admins.password' => FieldAccess::Hidden]);

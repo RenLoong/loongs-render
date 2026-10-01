@@ -91,6 +91,11 @@ final class AdminsPage extends TablePage
 
 The other builders follow the same pattern:
 
+- `Table` options: `->tree(children: 'children', column: null, expanded: true)` makes a tree table
+  (the API returns the whole tree; rows are indented in `column`, default the first column; no
+  pager), `->paginate(false)` shows a full flat list without a pager, and
+  `->notice('来源：{files} · 版本 {hash}', '/api/sources', 'info')` shows a notice above the table
+  (placeholders are filled from the object that `api` returns; without `api` the text is static).
 - `Form::make()`: `->load()`, `->submit(method, api, mode: create|update)`, `->columns(2)`,
   `->sections([Section::make('基本信息', [...])])` or `->fields([...])`, `->actions()`. The default
   actions are submit and close.

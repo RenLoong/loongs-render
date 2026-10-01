@@ -1372,6 +1372,53 @@
                         }
                     },
                     "additionalProperties": false
+                },
+                "pagination": {
+                    "const": false
+                },
+                "tree": {
+                    "type": "object",
+                    "required": [
+                        "children",
+                        "expanded"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                        "children": {
+                            "type": "string"
+                        },
+                        "column": {
+                            "type": "string"
+                        },
+                        "expanded": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "notice": {
+                    "type": "object",
+                    "required": [
+                        "message",
+                        "type"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                        "message": {
+                            "type": "string"
+                        },
+                        "api": {
+                            "type": "string",
+                            "pattern": "^/(?!/)\\S*$"
+                        },
+                        "type": {
+                            "enum": [
+                                "info",
+                                "success",
+                                "warning",
+                                "error"
+                            ]
+                        }
+                    }
                 }
             }
         },

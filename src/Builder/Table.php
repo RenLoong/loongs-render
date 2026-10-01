@@ -10,11 +10,13 @@ use Loongs\Render\Component\Field;
 use Loongs\Render\Exception\InvalidDefinition;
 use Loongs\Render\PageType;
 use Loongs\Render\RenderContext;
+use Loongs\Render\Support\Placeholder;
 
 /**
  * Table page (RENDER.md §6.3). Request: page, page_size, sort, order + search fields; response
  * {list,total,page,page_size}. Mobile: card list with the ->mobile() columns only (if none is marked,
- * the first three visible columns), no multi-select.
+ * the first three visible columns), no multi-select. ->tree() / ->paginate(false): the API returns
+ * every row at once (a tree or a list), no page / page_size and no pager.
  */
 class Table extends Builder
 {
@@ -34,6 +36,9 @@ class Table extends Builder
     /** @var list<int> */
     private array $pageSizes = [20, 50, 100];
     private ?array $defaultSort = null;
+    private ?array $tree = null;
+    private bool $paginate = true;
+    private ?array $notice = null;
 
     public function type(): PageType
     {
@@ -72,6 +77,45 @@ class Table extends Builder
         return $this;
     }
 
+    /**
+     * Tree table (RENDER.md §6.3): the API returns the whole tree (a list of nodes with
+     * [$children]); rows are shown indented in [$column] (default: the first column), no pager.
+     * [$expanded]: initial state of parent rows (the client may let users collapse / expand).
+     */
+    public function tree(string $children = 'children', ?string $column = null, bool $expanded = true): static
+    {
+        $this->tree = self::compact([
+            'children' => self::name($children, 'table tree children'),
+            'column' => $column !== null ? self::name($column, 'table tree column') : null,
+            'expanded' => $expanded,
+        ]);
+        $this->paginate = false;
+
+        return $this;
+    }
+
+    /** false: the API returns every row at once (a plain list or {list}); no page / page_size, no pager. */
+    public function paginate(bool $on = true): static
+    {
+        $this->tree === null || $on === false || throw new InvalidDefinition("table {$this->title}: a tree table is never paginated");
+        $this->paginate = $on;
+
+        return $this;
+    }
+
+    /**
+     * Notice shown above the table. [$message] may use {field} placeholders filled from the object
+     * returned by [$api] (e.g. '来源：{files} · 版本 {hash}'); without $api it is static text.
+     */
+    public function notice(string $message, ?string $api = null, string $type = 'info'): static
+    {
+        in_array($type, ['info', 'success', 'warning', 'error'], true) || throw new InvalidDefinition('table notice type: info | success | warning | error');
+        Placeholder::assert($message, "table {$this->title} notice");
+        $this->notice = self::compact(['message' => $message, 'api' => $api !== null ? self::path($api, 'table notice api') : null, 'type' => $type]);
+
+        return $this;
+    }
+
     public function validate(): void
     {
         $this->api !== null || throw new InvalidDefinition("table {$this->title}: api() is required");
@@ -80,6 +124,9 @@ class Table extends Builder
         foreach ($this->columns as $c) {
             isset($seen[$c->field]) && throw new InvalidDefinition("table {$this->title}: duplicate column {$c->field}");
             $seen[$c->field] = true;
+        }
+        if ($this->tree !== null && isset($this->tree['column']) && !isset($seen[$this->tree['column']])) {
+            throw new InvalidDefinition("table {$this->title}: tree column {$this->tree['column']} is not a column");
         }
     }
 
@@ -106,8 +153,11 @@ class Table extends Builder
             'toolbar' => $toolbar,
             'rowActions' => self::render($this->rowActions, $rc),
             'selection' => $selection,
-            'pageSizes' => $this->pageSizes,
+            'pageSizes' => $this->paginate ? $this->pageSizes : null,
             'defaultSort' => $this->defaultSort,
+            'pagination' => $this->paginate ? null : false,
+            'tree' => $this->tree,
+            'notice' => $this->notice,
         ]);
     }
 }

@@ -112,6 +112,11 @@ final class Schema
                 'api' => $api, 'rowKey' => $str, 'search' => $listOf('field'), 'columns' => $listOf('column'), 'toolbar' => $listOf('action'), 'rowActions' => $listOf('action'),
                 'selection' => $bool, 'pageSizes' => ['type' => 'array', 'items' => ['type' => 'integer', 'minimum' => 1]],
                 'defaultSort' => ['type' => 'object', 'required' => ['field', 'order'], 'properties' => ['field' => $str, 'order' => ['enum' => ['asc', 'desc']]], 'additionalProperties' => false],
+                'pagination' => ['const' => false],
+                'tree' => ['type' => 'object', 'required' => ['children', 'expanded'], 'additionalProperties' => false,
+                    'properties' => ['children' => $str, 'column' => $str, 'expanded' => $bool]],
+                'notice' => ['type' => 'object', 'required' => ['message', 'type'], 'additionalProperties' => false,
+                    'properties' => ['message' => $str, 'api' => $api, 'type' => ['enum' => ['info', 'success', 'warning', 'error']]]],
             ]],
             'formBody' => ['type' => 'object', 'required' => ['submit', 'sections', 'actions'], 'additionalProperties' => false, 'properties' => [
                 'load' => $api,
