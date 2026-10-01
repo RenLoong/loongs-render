@@ -7,6 +7,7 @@ namespace Loongs\Render\Component;
 use Loongs\Render\Exception\InvalidDefinition;
 use Loongs\Render\PageCode;
 use Loongs\Render\RenderContext;
+use Loongs\Render\Support\Condition;
 use Loongs\Render\Support\Placeholder;
 
 /**
@@ -15,6 +16,10 @@ use Loongs\Render\Support\Placeholder;
  *
  *   Action::openForm('编辑', 'admin.system.admin-form', ['id' => '{id}'])->can('system:admin:edit')
  *   Action::request('删除', 'DELETE', '/admin/api/admins/{id}')->confirm('确定删除 {username}？')->danger()
+ *       ->hiddenWhen('is_super', 'in', [true, 1])
+ *
+ * visibleWhen / hiddenWhen are evaluated by the client against the current row (rowActions) or the
+ * loaded record (form / detail actions); they are display hints only, the API must still enforce the rule.
  */
 final class Action extends Node
 {
@@ -31,6 +36,8 @@ final class Action extends Node
     private ?string $then = null;
     private ?string $thenPath = null;
     private ?string $message = null;
+    private ?array $visibleWhen = null;
+    private ?array $hiddenWhen = null;
 
     private function __construct(
         public private(set) string $action,
@@ -154,6 +161,24 @@ final class Action extends Node
         return $this;
     }
 
+    /** Show only when the current row / record matches: op eq | in | notEmpty (no scripts). */
+    public function visibleWhen(string $field, string $op, mixed $value = null): self
+    {
+        self::name($field, "action {$this->label} visibleWhen");
+        $this->visibleWhen = Condition::make("action {$this->label}", 'visibleWhen', $field, $op, $value);
+
+        return $this;
+    }
+
+    /** Hide when the current row / record matches: op eq | in | notEmpty (no scripts). */
+    public function hiddenWhen(string $field, string $op, mixed $value = null): self
+    {
+        self::name($field, "action {$this->label} hiddenWhen");
+        $this->hiddenWhen = Condition::make("action {$this->label}", 'hiddenWhen', $field, $op, $value);
+
+        return $this;
+    }
+
     /** Success toast text (shown together with then). */
     public function message(string $text): self { $this->message = Placeholder::assert($text, "action {$this->label} message"); return $this; }
 
@@ -174,6 +199,8 @@ final class Action extends Node
             'then' => $this->then,
             'thenPath' => $this->thenPath,
             'message' => $this->message,
+            'visibleWhen' => $this->visibleWhen,
+            'hiddenWhen' => $this->hiddenWhen,
         ]);
     }
 

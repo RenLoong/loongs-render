@@ -356,6 +356,25 @@ t('form: section ->can() removed; mobile single column, richText dropped, no spa
     eq(['field' => 'type', 'in' => ['local']], $d['body']['sections'][0]['fields'][3]['visibleWhen']);
 });
 
+t('action visibleWhen / hiddenWhen (row conditions, display hints)', function (): void {
+    $a = Action::request('删除', 'DELETE', '/admin/api/admins/{id}')->hiddenWhen('is_super', 'in', [true, 1])->toArray(rc());
+    eq(['field' => 'is_super', 'in' => [true, 1]], $a['hiddenWhen']);
+    ok(!isset($a['visibleWhen']), 'no visibleWhen');
+    $b = Action::openForm('审核', 'admin.system.admin-form', ['id' => '{id}'])->visibleWhen('status', 'eq', 0)->toArray(rc());
+    eq(['field' => 'status', 'eq' => 0], $b['visibleWhen']);
+    eq(['field' => 'mobile', 'notEmpty' => true], Action::request('解绑', 'DELETE', '/x/{id}')->visibleWhen('mobile', 'notEmpty')->toArray(rc())['visibleWhen']);
+    throws(InvalidDefinition::class, fn () => Action::close()->hiddenWhen('a', 'script', 'x'), 'hiddenWhen op must be eq | in | notEmpty');
+    throws(InvalidDefinition::class, fn () => Action::close()->visibleWhen('a', 'in', 'x'), 'visibleWhen in needs a list');
+    throws(InvalidDefinition::class, fn () => Action::close()->visibleWhen('a b', 'notEmpty'), 'invalid field name');
+    $page = Table::make('T')->api('/admin/api/x')->columns([Column::text('name', '名称')])
+        ->rowActions([Action::request('删除', 'DELETE', '/admin/api/x/{id}')->hiddenWhen('locked', 'eq', true)])->toArray(rc());
+    $v = new SchemaValidator();
+    eq([], $v->validate(['schema' => Schema::VERSION, 'page' => 'x.y', 'type' => 'table', 'title' => 'T', 'version' => 'abcdef012345', 'breadcrumb' => [], 'body' => $page, 'meta' => ['platforms' => ['pc', 'mobile'], 'platform' => 'pc']]));
+    $bad = $page;
+    $bad['rowActions'][0]['hiddenWhen'] = ['field' => 'locked', 'script' => 'x'];
+    ok($v->validate(['schema' => Schema::VERSION, 'page' => 'x.y', 'type' => 'table', 'title' => 'T', 'version' => 'abcdef012345', 'breadcrumb' => [], 'body' => $bad, 'meta' => ['platforms' => ['pc', 'mobile'], 'platform' => 'pc']]) !== [], 'unknown condition key rejected');
+});
+
 t('form validation errors', function (): void {
     throws(InvalidDefinition::class, fn () => Form::make('x')->fields([Field::text('a', 'A')])->toArray(rc()), 'submit');
     throws(InvalidDefinition::class, fn () => Form::make('x')->submit('DELETE', '/x'), 'POST | PUT | PATCH');

@@ -102,6 +102,14 @@ The other builders follow the same pattern:
 Every node can use `->can(...codes)` (any-of) and `->pcOnly()` / `->mobileOnly()` / `->platforms()`.
 On a builder, `->platforms()` sets `meta.platforms` for the page.
 
+Row / record conditions (display hints only; the API must still enforce the rule):
+
+- `Field::visibleWhen(field, op, value)`: show the field only when another form value matches.
+- `Action::visibleWhen(field, op, value)` / `Action::hiddenWhen(field, op, value)`: show or hide a
+  row action (or a form / detail action) depending on the current row or loaded record, for example
+  `->hiddenWhen('is_super', 'in', [true, 1])` keeps 删除 off the super admin row.
+- `op` is `eq` (scalar), `in` (list) or `notEmpty`. There are no expressions or scripts.
+
 Components (RENDER.md §7):
 
 | kind | names |

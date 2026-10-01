@@ -8,6 +8,7 @@ use BackedEnum;
 use Loongs\Render\Exception\InvalidDefinition;
 use Loongs\Render\FieldAccess;
 use Loongs\Render\RenderContext;
+use Loongs\Render\Support\Condition;
 use Loongs\Render\Support\Options;
 use Loongs\Render\Support\Placeholder;
 
@@ -163,12 +164,7 @@ final class Field extends Node
     public function visibleWhen(string $field, string $op, mixed $value = null): self
     {
         self::name($field, "field {$this->name} visibleWhen");
-        $this->visibleWhen = match ($op) {
-            'eq' => is_scalar($value) || $value === null ? ['field' => $field, 'eq' => $value] : throw new InvalidDefinition("field {$this->name}: visibleWhen eq needs a scalar"),
-            'in' => is_array($value) && array_is_list($value) ? ['field' => $field, 'in' => $value] : throw new InvalidDefinition("field {$this->name}: visibleWhen in needs a list"),
-            'notEmpty' => ['field' => $field, 'notEmpty' => true],
-            default => throw new InvalidDefinition("field {$this->name}: visibleWhen op must be eq | in | notEmpty"),
-        };
+        $this->visibleWhen = Condition::make("field {$this->name}", 'visibleWhen', $field, $op, $value);
 
         return $this;
     }

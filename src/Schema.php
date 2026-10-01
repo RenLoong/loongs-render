@@ -21,6 +21,7 @@ final class Schema
     {
         $str = ['type' => 'string'];
         $bool = ['type' => 'boolean'];
+        $cond = ['type' => 'object', 'required' => ['field'], 'properties' => ['field' => $str, 'eq' => new \stdClass(), 'in' => ['type' => 'array'], 'notEmpty' => $bool], 'additionalProperties' => false];
         $api = ['type' => 'string', 'pattern' => '^/(?!/)\S*$'];
         $code = ['type' => 'string', 'pattern' => PageCode::JSON_PATTERN];
         $params = ['type' => 'object', 'additionalProperties' => ['type' => ['string', 'number', 'boolean', 'null']]];
@@ -42,7 +43,7 @@ final class Schema
                 'optionsApi' => ['type' => 'object', 'required' => ['api'], 'properties' => ['api' => $api, 'searchable' => $bool], 'additionalProperties' => false],
                 'rules' => ['type' => 'array', 'items' => ['type' => 'object', 'required' => ['rule'], 'properties' => ['rule' => $str, 'value' => new \stdClass(), 'message' => $str], 'additionalProperties' => false]],
                 'props' => ['type' => 'object'],
-                'visibleWhen' => ['type' => 'object', 'required' => ['field'], 'properties' => ['field' => $str, 'eq' => new \stdClass(), 'in' => ['type' => 'array'], 'notEmpty' => $bool], 'additionalProperties' => false],
+                'visibleWhen' => $cond,
                 'span' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 24],
             ]],
             'column' => ['type' => 'object', 'required' => ['field', 'label', 'component'], 'additionalProperties' => false, 'properties' => [
@@ -57,6 +58,7 @@ final class Schema
                 'path' => $api, 'query' => $params, 'method' => ['enum' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']], 'api' => $api,
                 'body' => ['type' => 'object'], 'target' => $str, 'confirm' => $str, 'primary' => $bool, 'danger' => $bool, 'icon' => $str,
                 'then' => ['enum' => ['refresh', 'close', 'navigate', 'toast']], 'thenPath' => $api, 'message' => $str,
+                'visibleWhen' => $cond, 'hiddenWhen' => $cond,
             ], 'allOf' => [
                 $when('action', ['openForm', 'openDetail'], $req('page')),
                 $when('action', ['request', 'batchRequest'], $req('method', 'api')),

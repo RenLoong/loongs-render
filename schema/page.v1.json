@@ -520,6 +520,44 @@
                 },
                 "message": {
                     "type": "string"
+                },
+                "visibleWhen": {
+                    "type": "object",
+                    "required": [
+                        "field"
+                    ],
+                    "properties": {
+                        "field": {
+                            "type": "string"
+                        },
+                        "eq": {},
+                        "in": {
+                            "type": "array"
+                        },
+                        "notEmpty": {
+                            "type": "boolean"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "hiddenWhen": {
+                    "type": "object",
+                    "required": [
+                        "field"
+                    ],
+                    "properties": {
+                        "field": {
+                            "type": "string"
+                        },
+                        "eq": {},
+                        "in": {
+                            "type": "array"
+                        },
+                        "notEmpty": {
+                            "type": "boolean"
+                        }
+                    },
+                    "additionalProperties": false
                 }
             },
             "allOf": [
