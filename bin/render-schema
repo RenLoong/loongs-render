@@ -1,0 +1,20 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Prints the page-description JSON Schema (for frontend test suites):  vendor/bin/render-schema > page.v1.json
+foreach ([__DIR__ . '/../vendor/autoload.php', __DIR__ . '/../../../autoload.php'] as $autoload) {
+    if (is_file($autoload)) {
+        require $autoload;
+        break;
+    }
+}
+if (!class_exists(Loongs\Render\Schema::class)) {
+    spl_autoload_register(static function (string $c): void {
+        if (str_starts_with($c, 'Loongs\\Render\\')) {
+            require __DIR__ . '/../src/' . str_replace('\\', '/', substr($c, 14)) . '.php';
+        }
+    });
+}
+echo Loongs\Render\Schema::json(), "\n";

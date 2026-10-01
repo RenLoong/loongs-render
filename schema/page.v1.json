@@ -1,0 +1,1485 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/RenLoong/loongs-render/schema/v1.json",
+    "title": "loongs/render page description",
+    "type": "object",
+    "required": [
+        "schema",
+        "page",
+        "type",
+        "title",
+        "version",
+        "breadcrumb",
+        "body",
+        "meta"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "schema": {
+            "const": 1
+        },
+        "page": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        },
+        "type": {
+            "enum": [
+                "dashboard",
+                "form",
+                "table",
+                "detail",
+                "custom"
+            ]
+        },
+        "title": {
+            "type": "string"
+        },
+        "version": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{12}$"
+        },
+        "breadcrumb": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "body": {
+            "type": "object"
+        },
+        "meta": {
+            "type": "object",
+            "required": [
+                "platforms",
+                "platform"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "platforms": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "enum": [
+                            "pc",
+                            "mobile"
+                        ]
+                    }
+                },
+                "platform": {
+                    "enum": [
+                        "pc",
+                        "mobile"
+                    ]
+                },
+                "env": {
+                    "enum": [
+                        "h5",
+                        "app",
+                        "mp-weixin"
+                    ]
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "type": {
+                        "const": "dashboard"
+                    }
+                },
+                "required": [
+                    "type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "body": {
+                        "$ref": "#/$defs/dashboardBody"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "type": {
+                        "const": "form"
+                    }
+                },
+                "required": [
+                    "type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "body": {
+                        "$ref": "#/$defs/formBody"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "type": {
+                        "const": "table"
+                    }
+                },
+                "required": [
+                    "type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "body": {
+                        "$ref": "#/$defs/tableBody"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "type": {
+                        "const": "detail"
+                    }
+                },
+                "required": [
+                    "type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "body": {
+                        "$ref": "#/$defs/detailBody"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "type": {
+                        "const": "custom"
+                    }
+                },
+                "required": [
+                    "type"
+                ]
+            },
+            "then": {
+                "properties": {
+                    "body": {
+                        "$ref": "#/$defs/customBody"
+                    }
+                }
+            }
+        }
+    ],
+    "$defs": {
+        "option": {
+            "type": "object",
+            "required": [
+                "value",
+                "label"
+            ],
+            "properties": {
+                "value": {
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean"
+                    ]
+                },
+                "label": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string",
+                    "pattern": "^(#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-zA-Z0-9.-]{0,47})$"
+                },
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/option"
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "field": {
+            "type": "object",
+            "required": [
+                "name",
+                "label",
+                "component"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "component": {
+                    "enum": [
+                        "text",
+                        "textarea",
+                        "password",
+                        "number",
+                        "money",
+                        "select",
+                        "radio",
+                        "checkbox",
+                        "switch",
+                        "date",
+                        "datetime",
+                        "dateRange",
+                        "time",
+                        "treeSelect",
+                        "cascader",
+                        "upload",
+                        "image",
+                        "richText",
+                        "json"
+                    ]
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "readonly": {
+                    "type": "boolean"
+                },
+                "masked": {
+                    "type": "boolean"
+                },
+                "multiple": {
+                    "type": "boolean"
+                },
+                "placeholder": {
+                    "type": "string"
+                },
+                "default": {},
+                "help": {
+                    "type": "string"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/option"
+                    }
+                },
+                "optionsApi": {
+                    "type": "object",
+                    "required": [
+                        "api"
+                    ],
+                    "properties": {
+                        "api": {
+                            "type": "string",
+                            "pattern": "^/(?!/)\\S*$"
+                        },
+                        "searchable": {
+                            "type": "boolean"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "rule"
+                        ],
+                        "properties": {
+                            "rule": {
+                                "type": "string"
+                            },
+                            "value": {},
+                            "message": {
+                                "type": "string"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                "props": {
+                    "type": "object"
+                },
+                "visibleWhen": {
+                    "type": "object",
+                    "required": [
+                        "field"
+                    ],
+                    "properties": {
+                        "field": {
+                            "type": "string"
+                        },
+                        "eq": {},
+                        "in": {
+                            "type": "array"
+                        },
+                        "notEmpty": {
+                            "type": "boolean"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "span": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 24
+                }
+            }
+        },
+        "column": {
+            "type": "object",
+            "required": [
+                "field",
+                "label",
+                "component"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "component": {
+                    "enum": [
+                        "text",
+                        "tag",
+                        "badge",
+                        "datetime",
+                        "money",
+                        "image",
+                        "link",
+                        "copyable",
+                        "progress",
+                        "bool"
+                    ]
+                },
+                "sortable": {
+                    "type": "boolean"
+                },
+                "fixed": {
+                    "enum": [
+                        "left",
+                        "right"
+                    ]
+                },
+                "width": {
+                    "type": "integer"
+                },
+                "align": {
+                    "enum": [
+                        "left",
+                        "center",
+                        "right"
+                    ]
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/option"
+                    }
+                },
+                "format": {
+                    "type": "string"
+                },
+                "href": {
+                    "type": "string",
+                    "pattern": "^/(?!/)\\S*$"
+                },
+                "masked": {
+                    "type": "boolean"
+                },
+                "mobile": {
+                    "type": "boolean"
+                },
+                "span": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4
+                },
+                "emptyText": {
+                    "type": "string"
+                }
+            }
+        },
+        "action": {
+            "type": "object",
+            "required": [
+                "label",
+                "action"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "action": {
+                    "enum": [
+                        "openForm",
+                        "openDetail",
+                        "navigate",
+                        "request",
+                        "batchRequest",
+                        "export",
+                        "import",
+                        "refresh",
+                        "submit",
+                        "close"
+                    ]
+                },
+                "page": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+                },
+                "params": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
+                        ]
+                    }
+                },
+                "mode": {
+                    "enum": [
+                        "dialog",
+                        "drawer",
+                        "page"
+                    ]
+                },
+                "path": {
+                    "type": "string",
+                    "pattern": "^/(?!/)\\S*$"
+                },
+                "query": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
+                        ]
+                    }
+                },
+                "method": {
+                    "enum": [
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "PATCH",
+                        "DELETE"
+                    ]
+                },
+                "api": {
+                    "type": "string",
+                    "pattern": "^/(?!/)\\S*$"
+                },
+                "body": {
+                    "type": "object"
+                },
+                "target": {
+                    "type": "string"
+                },
+                "confirm": {
+                    "type": "string"
+                },
+                "primary": {
+                    "type": "boolean"
+                },
+                "danger": {
+                    "type": "boolean"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "then": {
+                    "enum": [
+                        "refresh",
+                        "close",
+                        "navigate",
+                        "toast"
+                    ]
+                },
+                "thenPath": {
+                    "type": "string",
+                    "pattern": "^/(?!/)\\S*$"
+                },
+                "message": {
+                    "type": "string"
+                }
+            },
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "action": {
+                                "enum": [
+                                    "openForm",
+                                    "openDetail"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "action"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "page"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "action": {
+                                "enum": [
+                                    "request",
+                                    "batchRequest"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "action"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "method",
+                            "api"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "action": {
+                                "const": "navigate"
+                            }
+                        },
+                        "required": [
+                            "action"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "path"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "action": {
+                                "enum": [
+                                    "export",
+                                    "import"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "action"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "api"
+                        ]
+                    }
+                }
+            ]
+        },
+        "shortcut": {
+            "type": "object",
+            "required": [
+                "title",
+                "action"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "action": {
+                    "type": "object",
+                    "required": [
+                        "action"
+                    ],
+                    "properties": {
+                        "action": {
+                            "enum": [
+                                "openForm",
+                                "openDetail",
+                                "navigate",
+                                "request",
+                                "batchRequest",
+                                "export",
+                                "import",
+                                "refresh",
+                                "submit",
+                                "close"
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "series": {
+            "type": "object",
+            "required": [
+                "field"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "line",
+                        "bar",
+                        "area",
+                        "scatter"
+                    ]
+                },
+                "color": {
+                    "type": "string",
+                    "pattern": "^(#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-zA-Z0-9.-]{0,47})$"
+                },
+                "area": {
+                    "type": "boolean"
+                },
+                "smooth": {
+                    "type": "boolean"
+                },
+                "dashed": {
+                    "type": "boolean"
+                },
+                "axis": {
+                    "enum": [
+                        "left",
+                        "right"
+                    ]
+                },
+                "stack": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "boolean"
+                },
+                "format": {
+                    "type": "string"
+                }
+            }
+        },
+        "mark": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": [
+                        "number",
+                        "string"
+                    ]
+                },
+                "from": {
+                    "type": [
+                        "number",
+                        "string"
+                    ]
+                },
+                "to": {
+                    "type": [
+                        "number",
+                        "string"
+                    ]
+                },
+                "label": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string",
+                    "pattern": "^(#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-zA-Z0-9.-]{0,47})$"
+                },
+                "axis": {
+                    "enum": [
+                        "left",
+                        "right",
+                        "x"
+                    ]
+                },
+                "dashed": {
+                    "type": "boolean"
+                }
+            },
+            "additionalProperties": false
+        },
+        "chart": {
+            "type": "object",
+            "required": [
+                "chart"
+            ],
+            "properties": {
+                "chart": {
+                    "enum": [
+                        "line",
+                        "bar",
+                        "stackedBar",
+                        "area",
+                        "pie",
+                        "donut",
+                        "radar",
+                        "scatter",
+                        "gauge",
+                        "combo",
+                        "custom"
+                    ]
+                },
+                "name": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9-]*$"
+                },
+                "config": {
+                    "type": "object"
+                },
+                "api": {
+                    "type": "string",
+                    "pattern": "^/(?!/)\\S*$"
+                },
+                "x": {
+                    "type": "object",
+                    "required": [
+                        "field",
+                        "type"
+                    ],
+                    "properties": {
+                        "field": {
+                            "type": "string"
+                        },
+                        "type": {
+                            "enum": [
+                                "category",
+                                "time",
+                                "value"
+                            ]
+                        },
+                        "format": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "series": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/$defs/series"
+                    }
+                },
+                "yAxis": {
+                    "type": "object",
+                    "properties": {
+                        "left": {
+                            "type": "object"
+                        },
+                        "right": {
+                            "type": "object"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "legend": {
+                    "enum": [
+                        "top",
+                        "bottom",
+                        "left",
+                        "right",
+                        "none"
+                    ]
+                },
+                "tooltip": {
+                    "type": "object",
+                    "properties": {
+                        "shared": {
+                            "type": "boolean"
+                        },
+                        "format": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "labels": {
+                    "type": "object",
+                    "properties": {
+                        "show": {
+                            "type": "boolean"
+                        },
+                        "format": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "markLines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/mark"
+                    }
+                },
+                "markAreas": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/mark"
+                    }
+                },
+                "palette": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "pattern": "^(#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-zA-Z0-9.-]{0,47})$"
+                    }
+                },
+                "height": {
+                    "type": "integer",
+                    "minimum": 80,
+                    "maximum": 1200
+                },
+                "emptyText": {
+                    "type": "string"
+                },
+                "renderer": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "chart": {
+                                "const": "custom"
+                            }
+                        },
+                        "required": [
+                            "chart"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "name"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "chart": {
+                                "not": {
+                                    "const": "custom"
+                                }
+                            }
+                        },
+                        "required": [
+                            "chart"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "api",
+                            "series"
+                        ]
+                    }
+                }
+            ]
+        },
+        "block": {
+            "type": "object",
+            "required": [
+                "component"
+            ],
+            "properties": {
+                "component": {
+                    "enum": [
+                        "stat",
+                        "chart",
+                        "rank",
+                        "shortcuts",
+                        "descriptions",
+                        "table",
+                        "timeline",
+                        "markdown",
+                        "alert",
+                        "card",
+                        "collapse",
+                        "grid"
+                    ]
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "span": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 24
+                },
+                "refresh": {
+                    "type": "integer",
+                    "minimum": 5
+                }
+            },
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "component": {
+                                "const": "chart"
+                            }
+                        },
+                        "required": [
+                            "component"
+                        ]
+                    },
+                    "then": {
+                        "$ref": "#/$defs/chart"
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "component": {
+                                "const": "stat"
+                            }
+                        },
+                        "required": [
+                            "component"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "api",
+                            "field"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "component": {
+                                "const": "rank"
+                            }
+                        },
+                        "required": [
+                            "component"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "api",
+                            "label",
+                            "value"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "component": {
+                                "const": "shortcuts"
+                            }
+                        },
+                        "required": [
+                            "component"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "items"
+                        ],
+                        "properties": {
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/$defs/shortcut"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "component": {
+                                "const": "descriptions"
+                            }
+                        },
+                        "required": [
+                            "component"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "items",
+                            "columns"
+                        ],
+                        "properties": {
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/$defs/column"
+                                }
+                            },
+                            "columns": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 4
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "component": {
+                                "const": "table"
+                            }
+                        },
+                        "required": [
+                            "component"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "page"
+                        ],
+                        "properties": {
+                            "page": {
+                                "type": "string",
+                                "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+                            },
+                            "params": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": [
+                                        "string",
+                                        "number",
+                                        "boolean",
+                                        "null"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "component": {
+                                "const": "timeline"
+                            }
+                        },
+                        "required": [
+                            "component"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "api"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "component": {
+                                "const": "markdown"
+                            }
+                        },
+                        "required": [
+                            "component"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "content"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "component": {
+                                "const": "alert"
+                            }
+                        },
+                        "required": [
+                            "component"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "type",
+                            "message"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "component": {
+                                "enum": [
+                                    "card",
+                                    "grid"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "component"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "blocks"
+                        ],
+                        "properties": {
+                            "blocks": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/$defs/block"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "component": {
+                                "const": "collapse"
+                            }
+                        },
+                        "required": [
+                            "component"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "panels"
+                        ],
+                        "properties": {
+                            "panels": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/$defs/tab"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "tab": {
+            "type": "object",
+            "required": [
+                "title",
+                "blocks"
+            ],
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "blocks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/block"
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "section": {
+            "type": "object",
+            "required": [
+                "fields"
+            ],
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "collapsible": {
+                    "type": "boolean"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/field"
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "submit": {
+            "type": "object",
+            "required": [
+                "method",
+                "api"
+            ],
+            "properties": {
+                "method": {
+                    "enum": [
+                        "POST",
+                        "PUT",
+                        "PATCH"
+                    ]
+                },
+                "api": {
+                    "type": "string",
+                    "pattern": "^/(?!/)\\S*$"
+                }
+            },
+            "additionalProperties": false
+        },
+        "tableBody": {
+            "type": "object",
+            "required": [
+                "api",
+                "rowKey",
+                "columns"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "api": {
+                    "type": "string",
+                    "pattern": "^/(?!/)\\S*$"
+                },
+                "rowKey": {
+                    "type": "string"
+                },
+                "search": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/field"
+                    }
+                },
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/column"
+                    }
+                },
+                "toolbar": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/action"
+                    }
+                },
+                "rowActions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/action"
+                    }
+                },
+                "selection": {
+                    "type": "boolean"
+                },
+                "pageSizes": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                },
+                "defaultSort": {
+                    "type": "object",
+                    "required": [
+                        "field",
+                        "order"
+                    ],
+                    "properties": {
+                        "field": {
+                            "type": "string"
+                        },
+                        "order": {
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            }
+        },
+        "formBody": {
+            "type": "object",
+            "required": [
+                "submit",
+                "sections",
+                "actions"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "load": {
+                    "type": "string",
+                    "pattern": "^/(?!/)\\S*$"
+                },
+                "submit": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/submit"
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "create": {
+                                    "$ref": "#/$defs/submit"
+                                },
+                                "update": {
+                                    "$ref": "#/$defs/submit"
+                                }
+                            },
+                            "additionalProperties": false,
+                            "minProperties": 1
+                        }
+                    ]
+                },
+                "layout": {
+                    "enum": [
+                        "vertical",
+                        "horizontal",
+                        "inline"
+                    ]
+                },
+                "columns": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4
+                },
+                "sections": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/section"
+                    }
+                },
+                "actions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/action"
+                    }
+                }
+            }
+        },
+        "dashboardBody": {
+            "type": "object",
+            "required": [
+                "grid",
+                "blocks"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "grid": {
+                    "const": 24
+                },
+                "blocks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/block"
+                    }
+                }
+            }
+        },
+        "detailBody": {
+            "type": "object",
+            "required": [
+                "load"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "load": {
+                    "type": "string",
+                    "pattern": "^/(?!/)\\S*$"
+                },
+                "header": {
+                    "type": "object",
+                    "required": [
+                        "title"
+                    ],
+                    "properties": {
+                        "title": {
+                            "type": "string"
+                        },
+                        "tags": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/column"
+                            }
+                        },
+                        "actions": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/action"
+                            }
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "tabs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/tab"
+                    }
+                },
+                "blocks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/block"
+                    }
+                }
+            }
+        },
+        "customBody": {
+            "type": "object",
+            "required": [
+                "component",
+                "config"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "component": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9-]*$"
+                },
+                "config": {
+                    "type": "object"
+                }
+            }
+        }
+    }
+}
