@@ -230,6 +230,50 @@ interface PermissionResolver { public function allows(string $code, PageContext 
 interface FieldPolicy       { public function access(string $resource, string $field, PageContext $ctx): FieldAccess; }  // Hidden | Masked | Readonly | Editable
 ```
 
+## Languages (i18n)
+
+loongs/render has no translator of its own; it defines the one-method contract
+`Contract\Translator::translate(string $text, string $locale): ?string` (null = keep the source text).
+Use [loongs/language](https://github.com/RenLoong/loongs-language) (packs, Accept-Language
+negotiation, fallback chains, per-coroutine locale) through its adapter, or any closure:
+
+```php
+use Loongs\Language\{Catalog, Translator};
+use Loongs\Language\Integration\Render\RenderTranslator;
+
+$t = new Translator(Catalog::fromDirectories($appsDir . '/Admin/lang'), fallback: 'zh-CN');
+$registry = new PageRegistry($factory, translator: new RenderTranslator($t));
+// or: new PageRegistry(translator: new I18n\CallbackTranslator(['en-US' => ['管理员' => 'Administrators']]))
+
+$client = ClientInfo::fromHeaders($headers)->withLocale($t->negotiate($headers['accept-language'] ?? null));
+$desc = $registry->render($code, new PageContext($client), $permissions);
+// response: ETag from $desc, plus "Vary: Accept-Language"
+```
+
+- Page builders keep writing source-language texts (`Table::make('管理员')`, `Field::text('name', '名称')`);
+  the registry translates the built description: title, breadcrumb and, anywhere in the body, `title`,
+  `label`, `message`, `placeholder`, `help`, `confirm`, `emptyText`, `format`, `okText`, `cancelText`,
+  `description`, `text`, `unit`, `prefix`, `suffix`, chart series `name`, markdown / alert `content`
+  (`I18n\DescriptionTranslator::TEXT_KEYS`). Field `name`, `field`, `api`, values, icons and colors are
+  never touched. Templates are translated whole and keep their placeholders (`确定删除 {username}？` →
+  `Delete {username}?`).
+- `ClientInfo::$locale` is part of `cacheKey()` / `Http\CacheKey`, and `meta.locale` is part of the
+  description `version`, so ETags differ per language.
+- `PageRegistry::inspect($code)['texts']` lists every translatable string of a page (PC + mobile) —
+  feed it to `Translator::missingKeys($texts, 'en-US')` in a CI / console check.
+
+## Theme colors (light / dark)
+
+Colors in descriptions (option / tag colors, chart `series.color`, `palette`, mark lines / areas) are:
+
+- semantic tokens resolved by the client for its current theme and accent: `primary`, `secondary`,
+  `success`, `warning`, `danger`, `info`, `muted`, `default`, and the categorical palette `chart1` …
+  `chart8` (`Support\Color::palette()`);
+- fixed hex colors `#rgb` / `#rrggbb` / `#rrggbbaa` (same in both themes);
+- light/dark pairs `"light|dark"` (`Color::pair('#16a34a', '#4ade80')`, tokens allowed on either side).
+
+Prefer tokens; a chart without `palette` uses the client's themed default palette.
+
 ## JSON Schema for frontend tests
 
 `Schema::jsonSchema()` / `bin/render-schema` / `schema/page.v1.json` give the JSON Schema

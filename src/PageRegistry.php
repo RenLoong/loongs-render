@@ -9,12 +9,14 @@ use FilesystemIterator;
 use Loongs\Render\Builder\Builder;
 use Loongs\Render\Contract\FieldPolicy;
 use Loongs\Render\Contract\PermissionResolver;
+use Loongs\Render\Contract\Translator;
 use Loongs\Render\Exception\InvalidDefinition;
 use Loongs\Render\Exception\PageForbidden;
 use Loongs\Render\Exception\PageNotFound;
 use Loongs\Render\Exception\PageTypeMismatch;
 use Loongs\Render\Exception\PlatformNotSupported;
 use Loongs\Render\Exception\SchemaNotSupported;
+use Loongs\Render\I18n\DescriptionTranslator;
 use Loongs\Render\Policy\AllowAll;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -41,6 +43,7 @@ final class PageRegistry
     public function __construct(
         ?Closure $factory = null,
         public readonly ComponentCatalog $catalog = new ComponentCatalog(),
+        public readonly ?Translator $translator = null,
     ) {
         $this->factory = $factory ?? static fn (string $class): Page => new $class();
     }
@@ -197,6 +200,7 @@ final class PageRegistry
         }
         $rc = new RenderContext($ctx, $permissions, $fieldPolicy, $this->catalog);
         $body = $builder->toArray($rc);
+        $locale = $ctx->client->locale;
 
         $desc = [
             'schema' => Schema::VERSION,
@@ -210,8 +214,16 @@ final class PageRegistry
                 'platforms' => array_map(static fn (Platform $p): string => $p->value, $platforms),
                 'platform' => $ctx->client->platform->value,
                 'env' => $ctx->client->env?->value,
+                'locale' => $locale,
             ], static fn ($v): bool => $v !== null),
         ];
+        if ($this->translator !== null && $locale !== null) {
+            $tr = new DescriptionTranslator();
+            $desc['title'] = $this->translator->translate($desc['title'], $locale) ?? $desc['title'];
+            $desc['breadcrumb'] = array_map(fn (string $s): string => $this->translator->translate($s, $locale) ?? $s, $desc['breadcrumb']);
+            $desc['body'] = $tr->translate($desc['body'], $this->translator, $locale);
+        }
+        // after translation: the version (→ ETag) differs per language
         $desc['version'] = substr(hash('sha256', $def->version . json_encode($desc, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)), 0, 12);
 
         return $desc;
@@ -222,12 +234,16 @@ final class PageRegistry
      * the field policy (built with all permissions granted, for PC and mobile). Useful to check menu.json
      * button codes and resource_fields.
      *
-     * @return array{type: string, permissions: list<string>, codes: list<string>, fields: list<string>}
+     * "texts" lists every translatable string (title, breadcrumb and DescriptionTranslator texts) for
+     * missing-translation checks.
+     *
+     * @return array{type: string, permissions: list<string>, codes: list<string>, fields: list<string>, texts: list<string>}
      */
     public function inspect(string $code): array
     {
         $def = $this->get($code);
-        $codes = $fields = [];
+        $codes = $fields = $texts = [];
+        $tr = new DescriptionTranslator();
         foreach ([ClientInfo::pc(), ClientInfo::mobile()] as $client) {
             $ctx = (new PageContext($client))->withPage($code);
             $builder = $this->build($def, $ctx);
@@ -235,14 +251,20 @@ final class PageRegistry
                 continue;
             }
             $rc = new RenderContext($ctx, new AllowAll(), null, $this->catalog);
-            $builder->toArray($rc);
+            $body = $builder->toArray($rc);
             $codes += $rc->codes;
             $fields += $rc->fields;
+            foreach ([$builder->title, ...$builder->breadcrumb, ...$tr->texts($body)] as $s) {
+                if ($s !== '') {
+                    $texts[$s] = true;
+                }
+            }
         }
         ksort($codes);
         ksort($fields);
 
-        return ['type' => $def->type->value, 'permissions' => $def->permissions, 'codes' => array_keys($codes), 'fields' => array_keys($fields)];
+        return ['type' => $def->type->value, 'permissions' => $def->permissions, 'codes' => array_keys($codes), 'fields' => array_keys($fields),
+            'texts' => array_map('strval', array_keys($texts))];
     }
 
     private function build(PageDefinition $def, PageContext $ctx): Builder

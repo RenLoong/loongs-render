@@ -10,7 +10,8 @@
     },
     "suggest": {
         "loongs/framework": "Serve GET /admin/api/pages/{page} from a loong-swoole app (host-side wiring; a framework bridge is planned)",
-        "loongs/cache": "Cache rendered descriptions under Http\\CacheKey (code + platform + permission fingerprint + page version)"
+        "loongs/cache": "Cache rendered descriptions under Http\\CacheKey (code + platform + permission fingerprint + page version)",
+        "loongs/language": "Translate page descriptions per client locale (Loongs\\Language\\Integration\\Render\\RenderTranslator implements Contract\\Translator)"
     },
     "autoload": {
         "psr-4": {

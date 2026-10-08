@@ -28,6 +28,8 @@ use Loongs\Render\Exception\PageTypeMismatch;
 use Loongs\Render\Exception\PlatformNotSupported;
 use Loongs\Render\Exception\SchemaNotSupported;
 use Loongs\Render\FieldAccess;
+use Loongs\Render\I18n\CallbackTranslator;
+use Loongs\Render\I18n\DescriptionTranslator;
 use Loongs\Render\Http\CacheKey;
 use Loongs\Render\Http\Etag;
 use Loongs\Render\PageCode;
@@ -39,6 +41,7 @@ use Loongs\Render\Policy\CodeList;
 use Loongs\Render\Policy\FieldMap;
 use Loongs\Render\RenderContext;
 use Loongs\Render\Schema;
+use Loongs\Render\Support\Color;
 use Loongs\Render\Support\Options;
 use Loongs\Render\Support\Placeholder;
 use Loongs\Render\Validation\SchemaValidator;
@@ -597,6 +600,97 @@ t('custom DI factory', function (): void {
     $r->register(Fixture\Pages\OverviewPage::class);
     $r->render('admin.overview', new PageContext());
     eq([Fixture\Pages\OverviewPage::class], $made);
+});
+
+// ---------------------------------------------------------------- i18n + theme colors
+t('i18n: ClientInfo locale is part of cacheKey / CacheKey', function () use ($registry): void {
+    $c = ClientInfo::fromHeaders(['X-Client-Platform' => 'mobile', 'X-Client-Env' => 'h5']);
+    eq(null, $c->locale);
+    $en = $c->withLocale('en-US');
+    eq('mobile.h5@en-US', $en->cacheKey());
+    eq('mobile.h5', $c->cacheKey(), 'withLocale is immutable');
+    eq(null, ClientInfo::pc()->withLocale('../x')->locale, 'junk locale dropped');
+    $def = $registry->get('admin.system.admins');
+    ok(CacheKey::of($def, $en, 'fp') !== CacheKey::of($def, $c->withLocale('zh-CN'), 'fp'), 'cache key per locale');
+});
+
+t('i18n: PageRegistry translator translates texts, keeps data, version/ETag differ per locale', function () use ($all): void {
+    $packs = ['en-US' => [
+        '管理员' => 'Administrators', '系统管理' => 'System', '用户名' => 'Username', '状态' => 'Status', '正常' => 'Active',
+        '新增' => 'New', '删除' => 'Delete', '确定删除 {username}？' => 'Delete {username}?', '用户名/姓名' => 'Username / name',
+        '开通数' => 'Opened',
+    ]];
+    $calls = 0;
+    $tr = new CallbackTranslator(function (string $text, string $locale) use ($packs, &$calls): ?string {
+        $calls++;
+
+        return $packs[$locale][$text] ?? null;
+    });
+    $r = new PageRegistry(translator: $tr);
+    $r->discover(__DIR__ . '/fixtures/Pages', 'Fixture\\Pages');
+    $zh = $r->render('admin.system.admins', new PageContext(ClientInfo::pc()), $all);
+    eq(0, $calls, 'no locale → no translation');
+    eq(false, isset($zh['meta']['locale']));
+    $en = $r->render('admin.system.admins', new PageContext(ClientInfo::pc()->withLocale('en-US')), $all);
+    valid($en);
+    eq('Administrators', $en['title']);
+    eq(['System', 'Administrators'], $en['breadcrumb']);
+    eq('en-US', $en['meta']['locale']);
+    eq('Username', $en['body']['columns'][0]['label']);
+    eq('username', $en['body']['columns'][0]['field'], 'data keys untouched');
+    eq('keyword', $en['body']['search'][0]['name'], 'field name (submitted key) untouched');
+    eq('Username / name', $en['body']['search'][0]['label']);
+    eq('Active', $en['body']['columns'][3]['options'][0]['label'], 'enum option labels');
+    eq('Delete {username}?', $en['body']['rowActions'][1]['confirm'], 'templates keep placeholders');
+    eq('邮箱', $en['body']['columns'][2]['label'], 'no translation → source text');
+    eq('yyyy-MM-dd HH:mm', $en['body']['columns'][4]['format']);
+    ok($en['version'] !== $zh['version'], 'version (ETag) differs per locale');
+    $zh2 = $r->render('admin.system.admins', new PageContext(ClientInfo::pc()->withLocale('zh-CN')), $all);
+    eq($zh['title'], $zh2['title']);
+    ok($zh2['version'] !== $zh['version'], 'meta.locale is part of the version');
+    eq(Etag::of($en), Etag::of($r->render('admin.system.admins', new PageContext(ClientInfo::pc()->withLocale('en-US')), $all)), 'stable per locale');
+    $ov = $r->render('admin.overview', new PageContext(ClientInfo::pc()->withLocale('en-US')), $all);
+    valid($ov);
+    $series = [];
+    array_walk_recursive($ov, function ($v, $k) use (&$series): void {
+        if ($k === 'name') {
+            $series[] = $v;
+        }
+    });
+    ok(in_array('Opened', $series, true), 'chart series names: ' . json_encode($series, JSON_UNESCAPED_UNICODE));
+});
+
+t('i18n: DescriptionTranslator texts() + inspect texts for missing-translation checks', function () use ($registry): void {
+    $d = new DescriptionTranslator();
+    $node = ['component' => 'text', 'name' => 'nickname', 'label' => '昵称', 'placeholder' => '请输入', 'options' => [['value' => 1, 'label' => '是']],
+        'blocks' => [['component' => 'markdown', 'content' => '说明'], ['chart' => 'line', 'series' => [['field' => 'n', 'name' => '数量']], 'emptyText' => '暂无']]];
+    eq(['昵称', '请输入', '是', '说明', '数量', '暂无'], $d->texts($node));
+    $tr = $d->translate($node, new CallbackTranslator(['en' => ['昵称' => 'Nickname', '数量' => 'Count']]), 'en');
+    eq(['nickname', 'Nickname', 'Count'], [$tr['name'], $tr['label'], $tr['blocks'][1]['series'][0]['name']]);
+    $i = $registry->inspect('admin.system.admins');
+    foreach (['管理员', '系统管理', '用户名', '正常', '禁用', '确定删除 {username}？'] as $s) {
+        ok(in_array($s, $i['texts'], true), "{$s} in texts");
+    }
+    ok(!in_array('keyword', $i['texts'], true), 'field names are not texts');
+});
+
+t('theme colors: chart tokens, light|dark pairs, validation', function (): void {
+    eq('chart3', Color::assert('chart3', 'x'));
+    eq('#16a34a|#4ade80', Color::assert('#16A34A|#4ADE80', 'x'));
+    eq('primary|#0a84ff', Color::pair('primary', '#0A84FF'));
+    eq(8, count(Color::palette()));
+    throws(InvalidDefinition::class, fn () => Color::assert('chart9', 'x'), 'light|dark');
+    throws(InvalidDefinition::class, fn () => Color::assert('#fff|#000|#111', 'x'));
+    throws(InvalidDefinition::class, fn () => Color::assert('red|#000', 'x'));
+    $c = Chart::line('趋势')->api('/admin/api/x')->x('day')->series('n', '数量', color: '#2563eb|#60a5fa')->palette(['chart1', 'success|#30d158']);
+    $a = $c->toArray(rc());
+    eq('#2563eb|#60a5fa', $a['series'][0]['color']);
+    eq(['chart1', 'success|#30d158'], $a['palette']);
+    $desc = ['schema' => Schema::VERSION, 'page' => 'a.b', 'type' => 'dashboard', 'title' => 't', 'version' => str_repeat('a', 12), 'breadcrumb' => [],
+        'body' => ['grid' => 24, 'blocks' => [$a]], 'meta' => ['platforms' => ['pc'], 'platform' => 'pc', 'locale' => 'en-US']];
+    eq([], (new SchemaValidator())->validate($desc));
+    $desc['body']['blocks'][0]['palette'] = ['#fff|#000|#111'];
+    eq(1, count((new SchemaValidator())->validate($desc)));
 });
 
 // ---------------------------------------------------------------- JSON schema

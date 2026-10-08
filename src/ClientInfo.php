@@ -10,6 +10,10 @@ namespace Loongs\Render;
  *   X-Client-Env:      h5 | app | mp-weixin   (mobile only; ignored for pc)
  *   X-Render-Schema:   highest description schema the client understands (missing → Schema::VERSION)
  *   X-Render-Components: optional hash of the client's registered components (ComponentCatalog::hash())
+ *
+ * $locale is the language the description is rendered in (set by the host, e.g. negotiated from
+ * Accept-Language with loongs/language: ->withLocale($tag)); null = untranslated source texts. It is
+ * part of cacheKey(), so cached descriptions / ETags differ per language.
  */
 final class ClientInfo
 {
@@ -22,7 +26,11 @@ final class ClientInfo
         public private(set) ?ClientEnv $env = null,
         public private(set) int $schema = Schema::VERSION,
         public private(set) ?string $componentsHash = null,
+        public private(set) ?string $locale = null,
     ) {
+        if ($locale !== null && preg_match('/^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8}){0,4}$/', $locale) !== 1) {
+            $this->locale = null;
+        }
         if ($platform === Platform::Pc) {
             $this->env = null;
         }
@@ -56,9 +64,15 @@ final class ClientInfo
         );
     }
 
-    /** Stable key part for caches: "pc" | "mobile" | "mobile.mp-weixin". */
+    /** Same client, rendered in $locale (BCP 47 tag such as "en-US"; null = source texts). */
+    public function withLocale(?string $locale): self
+    {
+        return new self($this->platform, $this->env, $this->schema, $this->componentsHash, $locale);
+    }
+
+    /** Stable key part for caches: "pc" | "mobile" | "mobile.mp-weixin", plus "@en-US" when localized. */
     public function cacheKey(): string
     {
-        return $this->platform->value . ($this->env !== null ? '.' . $this->env->value : '');
+        return $this->platform->value . ($this->env !== null ? '.' . $this->env->value : '') . ($this->locale !== null ? '@' . $this->locale : '');
     }
 }

@@ -27,7 +27,8 @@ final class Schema
         $params = ['type' => 'object', 'additionalProperties' => ['type' => ['string', 'number', 'boolean', 'null']]];
         $ref = static fn (string $d): array => ['$ref' => "#/\$defs/{$d}"];
         $listOf = static fn (string $d): array => ['type' => 'array', 'items' => ['$ref' => "#/\$defs/{$d}"]];
-        $color = ['type' => 'string', 'pattern' => '^(#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-zA-Z0-9.-]{0,47})$'];
+        $one = '(#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-zA-Z0-9.-]{0,47})';
+        $color = ['type' => 'string', 'pattern' => "^{$one}(\\|{$one})?\$"];   // hex / token, or a "light|dark" pair
         $when = static fn (string $prop, array|string $values, array $then): array => ['if' => ['properties' => [$prop => is_array($values) ? ['enum' => $values] : ['const' => $values]], 'required' => [$prop]], 'then' => $then];
         $req = static fn (string ...$keys): array => ['required' => $keys];
 
@@ -156,6 +157,7 @@ final class Schema
                     'platforms' => ['type' => 'array', 'minItems' => 1, 'items' => ['enum' => ['pc', 'mobile']]],
                     'platform' => ['enum' => ['pc', 'mobile']],
                     'env' => ['enum' => array_map(static fn (ClientEnv $e): string => $e->value, ClientEnv::cases())],
+                    'locale' => ['type' => 'string', 'pattern' => '^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8}){0,4}$'],
                 ]],
             ],
             'allOf' => array_map(static fn (PageType $t): array => $when('type', $t->value, ['properties' => ['body' => $ref($t->value . 'Body')]]), PageType::cases()),
