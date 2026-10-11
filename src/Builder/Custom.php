@@ -10,7 +10,7 @@ use Loongs\Render\RenderContext;
 
 /**
  * Custom page (RENDER.md §9 escape hatch): a client-side named page component plus JSON config, e.g.
- * Custom::make('角色权限')->component('role-permission-editor')->config(['api' => '/admin/api/roles']).
+ * Custom::make('角色权限')->component('role-permission-editor')->config(['api' => '/uuims/api/roles']).
  */
 class Custom extends Builder
 {

@@ -8,7 +8,7 @@ use Attribute;
 
 /**
  * Declares a page class (RENDER.md §4.2):
- *   #[AsPage('admin.system.admins', permission: 'system:admin')]
+ *   #[AsPage('uuims.system.users', permission: 'system:uuims')]
  *
  * permission: one code or a list (any-of); null = only login required (decided by the host).
  * version:    bump to invalidate caches when the page changes in a way the class hash doesn't show;

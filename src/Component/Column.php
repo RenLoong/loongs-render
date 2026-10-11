@@ -15,7 +15,7 @@ use Loongs\Render\Support\Placeholder;
  * Table column and detail / descriptions item (display components of RENDER.md §7).
  *
  *   Column::text('username', '用户名')->sortable()->fixed('left')->mobile()
- *   Column::tag('status', '状态')->enum(AdminStatus::class)
+ *   Column::tag('status', '状态')->enum(UuimsStatus::class)
  *   Column::money('amount', '金额')->format('{value|money:CNY}')
  *
  * On mobile, tables only keep columns marked ->mobile() (card list, RENDER.md §6.3).

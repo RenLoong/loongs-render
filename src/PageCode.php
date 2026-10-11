@@ -7,7 +7,7 @@ namespace Loongs\Render;
 use Loongs\Render\Exception\InvalidPageCode;
 
 /**
- * Page codes: [a-z0-9._-], starting with a letter or digit, ≤ 128 characters, e.g. admin.system.admins.
+ * Page codes: [a-z0-9._-], starting with a letter or digit, ≤ 128 characters, e.g. uuims.system.users.
  * Safe in URL paths, uni-app page parameters and mini program paths without escaping.
  */
 final class PageCode

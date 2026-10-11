@@ -7,7 +7,7 @@ namespace Loongs\Render\Contract;
 use Loongs\Render\PageContext;
 
 /**
- * Host-application permission check (admin: P1 permission codes). Used for the page permission of
+ * Host-application permission check (uuims: P1 permission codes). Used for the page permission of
  * #[AsPage] and every ->can() on actions, fields, columns, blocks, tabs and sections.
  */
 interface PermissionResolver

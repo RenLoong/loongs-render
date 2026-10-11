@@ -15,7 +15,7 @@ use Loongs\Render\Support\Placeholder;
  * or uCharts (uni-app). Formats are placeholder templates only — never executable code:
  *   {value} {series} {x} {name} {percent}, filters |thousands |percent:N |fixed:N |money:CNY |date:MM-dd
  *
- *   Chart::line('近30天开通')->api('/admin/api/stats/opens')
+ *   Chart::line('近30天开通')->api('/uuims/api/stats/opens')
  *       ->x('date', type: 'time', format: 'MM-dd')
  *       ->series('count', '开通数', color: '#2563eb', area: true, smooth: true)
  *       ->series('closed', '停用数', color: '#ef4444', dashed: true, axis: 'right')

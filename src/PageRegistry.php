@@ -27,7 +27,7 @@ use ReflectionClass;
  *
  *   $registry = new PageRegistry();
  *   $registry->discoverApps('/path/apps');                  // apps/<App>/Pages/*.php, App\<App>\Pages\…
- *   $desc = $registry->render('admin.system.admins', $ctx, $resolver, $fieldPolicy, PageType::Table);
+ *   $desc = $registry->render('uuims.system.users', $ctx, $resolver, $fieldPolicy, PageType::Table);
  *
  * render() applies, in order: schema version → page exists → page permission (PageForbidden = 403)
  * → build + type check → platform → ->can() / field policy / platform trimming of every node.
@@ -151,7 +151,7 @@ final class PageRegistry
     }
 
     /**
-     * For menu checks (admin:menus): the registered class type and the builder it actually returns must
+     * For menu checks (uuims:menus): the registered class type and the builder it actually returns must
      * both equal the menu page_type.
      */
     public function assertType(string $code, PageType|string $expected, ?PageContext $ctx = null): void

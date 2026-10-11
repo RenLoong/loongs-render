@@ -6,14 +6,14 @@ Server-driven UI for the loong-swoole stack (PHP 8.4). Pages are PHP classes. Ea
 which APIs load and submit the data. The client renderers only implement page templates and
 components:
 
-- Flutter (PC): `admin/client`
-- uni-app (H5 / App / WeChat mini program): `admin/mobile`
+- Flutter (PC): `uuims/client`
+- uni-app (H5 / App / WeChat mini program): `uuims/mobile`
 
 Permissions, field policies and per-platform trimming are applied on the server, so a client only
-receives what the current user may see on that device. The package itself has no admin-specific
+receives what the current user may see on that device. The package itself has no uuims-specific
 logic. Hosts plug their rules in through `PermissionResolver` and `FieldPolicy`.
 
-The design document is `admin/RENDER.md` in the loong-swoole repository (this package is step R0).
+The design document is `uuims/RENDER.md` in the loong-swoole repository (this package is step R0).
 
 ```bash
 composer require loongs/render:dev-main      # Packagist; locally via a path repo (see "Development")
@@ -26,7 +26,7 @@ Requirements: PHP ^8.4, ext-json. There are no other runtime dependencies.
 ```
 src/
   Page.php  TablePage FormPage DashboardPage DetailPage CustomPage   page base classes (type fixed per base)
-  AsPage.php                 #[AsPage('admin.system.admins', permission: 'system:admin', version: null)]
+  AsPage.php                 #[AsPage('uuims.system.users', permission: 'system:uuims', version: null)]
   PageRegistry.php           register / discover / discoverApps, render(), assertType(), inspect()
   PageDefinition.php PageContext.php PageType.php PageCode.php
   ClientInfo.php Platform.php ClientEnv.php                       X-Client-Platform / X-Client-Env / X-Render-Schema / X-Render-Components
@@ -49,41 +49,41 @@ tests/render_test.php        dependency-free smoke tests (+ tests/fixtures)
 ## A page
 
 ```php
-namespace App\Admin\Pages;
+namespace App\Uuims\Pages;
 
-use App\Admin\Enum\AdminStatus;          // backed enum implementing Loongs\Render\Contract\OptionEnum (label + color)
+use App\Uuims\Enum\UuimsStatus;          // backed enum implementing Loongs\Render\Contract\OptionEnum (label + color)
 use Loongs\Render\{AsPage, PageContext, TablePage};
 use Loongs\Render\Builder\Table;
 use Loongs\Render\Component\{Action, Column, Field};
 
-#[AsPage('admin.system.admins', permission: 'system:admin')]
-final class AdminsPage extends TablePage
+#[AsPage('uuims.system.users', permission: 'system:uuims')]
+final class UsersPage extends TablePage
 {
     public function build(PageContext $ctx): Table
     {
         return Table::make('管理员')
             ->breadcrumb(['系统管理', '管理员'])
-            ->resource('admins')                                   // FieldPolicy resource for every field / column
-            ->api('/admin/api/admins')
+            ->resource('users')                                   // FieldPolicy resource for every field / column
+            ->api('/uuims/api/users')
             ->rowKey('id')
             ->search([
                 Field::text('keyword', '用户名/姓名'),
-                Field::select('status', '状态')->options(AdminStatus::class),
+                Field::select('status', '状态')->options(UuimsStatus::class),
                 Field::dateRange('created_at', '创建时间'),
             ])
             ->columns([
                 Column::text('username', '用户名')->sortable()->fixed('left')->mobile(),
                 Column::text('mobile', '手机号'),                   // FieldPolicy: hidden → removed, masked → masked: true
-                Column::tag('status', '状态')->enum(AdminStatus::class)->mobile(),
+                Column::tag('status', '状态')->enum(UuimsStatus::class)->mobile(),
                 Column::datetime('created_at', '创建时间')->format('yyyy-MM-dd HH:mm'),
             ])
             ->toolbar([
-                Action::openForm('新增', 'admin.system.admin-form')->can('system:admin:create')->primary(),
+                Action::openForm('新增', 'uuims.system.uuims-form')->can('system:uuims:create')->primary(),
             ])
             ->rowActions([
-                Action::openForm('编辑', 'admin.system.admin-form', ['id' => '{id}'])->can('system:admin:edit'),
-                Action::request('删除', 'DELETE', '/admin/api/admins/{id}')
-                    ->confirm('确定删除 {username}？')->can('system:admin:delete')->danger(),
+                Action::openForm('编辑', 'uuims.system.uuims-form', ['id' => '{id}'])->can('system:uuims:edit'),
+                Action::request('删除', 'DELETE', '/uuims/api/users/{id}')
+                    ->confirm('确定删除 {username}？')->can('system:uuims:delete')->danger(),
             ]);
     }
 }
@@ -112,7 +112,7 @@ Row / record conditions (display hints only; the API must still enforce the rule
 - `Field::visibleWhen(field, op, value)`: show the field only when another form value matches.
 - `Action::visibleWhen(field, op, value)` / `Action::hiddenWhen(field, op, value)`: show or hide a
   row action (or a form / detail action) depending on the current row or loaded record, for example
-  `->hiddenWhen('is_super', 'in', [true, 1])` keeps 删除 off the super admin row.
+  `->hiddenWhen('is_super', 'in', [true, 1])` keeps 删除 off the super uuims row.
 - `op` is `eq` (scalar), `in` (list) or `notEmpty`. There are no expressions or scripts.
 
 Components (RENDER.md §7):
@@ -132,7 +132,7 @@ errors throw `InvalidDefinition` with the component and field named.
 
 ```php
 Chart::line('近30天开通')
-    ->api('/admin/api/stats/opens')
+    ->api('/uuims/api/stats/opens')
     ->x('date', type: 'time', format: 'MM-dd')
     ->series('count', '开通数', color: '#2563eb', area: true, smooth: true)
     ->series('closed', '停用数', color: '#ef4444', dashed: true, axis: 'right')
@@ -145,9 +145,9 @@ Chart::line('近30天开通')
     ->renderer('fl_chart', ['lineWidth' => 2])->renderer('ucharts', ['padding' => [15, 15, 0, 5]])
     ->height(320)->span(16)->refresh(60)->can('stats:view');
 
-Chart::donut('套餐占比')->api('/admin/api/stats/plans')->x('name')->series('count')->labels(true, '{name} {percent|percent:1}');
+Chart::donut('套餐占比')->api('/uuims/api/stats/plans')->x('name')->series('count')->labels(true, '{name} {percent|percent:1}');
 Chart::combo('收入/订单')->api('/s')->x('month')->series('income', type: 'bar')->series('orders', type: 'line', axis: 'right');
-Chart::custom('heatmap', ['api' => '/admin/api/stats/heat'], '活跃热力');   // client-registered chart component
+Chart::custom('heatmap', ['api' => '/uuims/api/stats/heat'], '活跃热力');   // client-registered chart component
 ```
 
 **Types:** `line` `bar` `stackedBar` `area` `pie` `donut` `radar` `scatter` `gauge` `combo` `custom`.
@@ -174,7 +174,7 @@ with scalar or list-of-scalar values. You can extend the whitelist at boot with
 $registry = new PageRegistry(fn (string $class) => $container->get($class));   // factory optional
 $registry->discoverApps(BASE_PATH . '/apps');                                     // apps/<App>/Pages → App\<App>\Pages\…
 
-// GET /admin/api/pages/{page}
+// GET /uuims/api/pages/{page}
 $client = ClientInfo::fromHeaders($request->headers());     // X-Client-Platform, X-Client-Env, X-Render-Schema, X-Render-Components
 $ctx    = new PageContext($client, params: $request->query(), user: $user);
 $def    = $registry->get($code);                             // PageNotFound → 404
@@ -210,8 +210,8 @@ if (Etag::matches($request->header('If-None-Match'), $etag)) { /* 304 */ }
 The result has this shape:
 
 ```json
-{ "schema": 1, "page": "admin.system.admins", "type": "table", "title": "管理员", "version": "1f0c9a7d2b3e",
-  "breadcrumb": ["系统管理", "管理员"], "body": { "api": "/admin/api/admins", "rowKey": "id", "columns": [ ... ] },
+{ "schema": 1, "page": "uuims.system.users", "type": "table", "title": "管理员", "version": "1f0c9a7d2b3e",
+  "breadcrumb": ["系统管理", "管理员"], "body": { "api": "/uuims/api/users", "rowKey": "id", "columns": [ ... ] },
   "meta": { "platforms": ["pc", "mobile"], "platform": "mobile", "env": "mp-weixin" } }
 ```
 
@@ -219,7 +219,7 @@ The result has this shape:
 permissions and the platform, and is used as the ETag.
 
 Other registry tools:
-- `assertType(code, page_type)`: for `admin:menus`. The error names the class and file.
+- `assertType(code, page_type)`: for `uuims:menus`. The error names the class and file.
 - `inspect(code)`: every `->can()` code and every `resource.field` the page uses. Use it to check
   menu.json button codes and `resource_fields`.
 
@@ -241,9 +241,9 @@ negotiation, fallback chains, per-coroutine locale) through its adapter, or any 
 use Loongs\Language\{Catalog, Translator};
 use Loongs\Language\Integration\Render\RenderTranslator;
 
-$t = new Translator(Catalog::fromDirectories($appsDir . '/Admin/lang'), fallback: 'zh-CN');
+$t = new Translator(Catalog::fromDirectories($appsDir . '/Uuims/lang'), fallback: 'zh-CN');
 $registry = new PageRegistry($factory, translator: new RenderTranslator($t));
-// or: new PageRegistry(translator: new I18n\CallbackTranslator(['en-US' => ['管理员' => 'Administrators']]))
+// or: new PageRegistry(translator: new I18n\CallbackTranslator(['en-US' => ['管理员' => 'Uuimsistrators']]))
 
 $client = ClientInfo::fromHeaders($headers)->withLocale($t->negotiate($headers['accept-language'] ?? null));
 $desc = $registry->render($code, new PageContext($client), $permissions);
@@ -296,8 +296,8 @@ php tests/render_test.php          # or: composer test
 
 ## Notes
 
-- There is no loongs/framework dependency. The HTTP route, cache store wiring and `admin:menus` checks
-  belong to the host (admin, R1). The package provides `Http\Etag`, `Http\CacheKey`,
+- There is no loongs/framework dependency. The HTTP route, cache store wiring and `uuims:menus` checks
+  belong to the host (uuims, R1). The package provides `Http\Etag`, `Http\CacheKey`,
   `PageRegistry::assertType()` and `inspect()` for that work.
 - `x` in a chart is an object `{field, type, format?}`, and `series` is a list of objects. These replace
   the short `"x": "date", "y": ["count"]` form in the RENDER.md §6.1 example.

@@ -14,8 +14,8 @@ use Loongs\Render\Support\Placeholder;
  * Buttons / operations (RENDER.md §5.3). Labels, confirm texts, params and APIs may use {field}
  * placeholders of the current row / record / route.
  *
- *   Action::openForm('编辑', 'admin.system.admin-form', ['id' => '{id}'])->can('system:admin:edit')
- *   Action::request('删除', 'DELETE', '/admin/api/admins/{id}')->confirm('确定删除 {username}？')->danger()
+ *   Action::openForm('编辑', 'uuims.system.uuims-form', ['id' => '{id}'])->can('system:uuims:edit')
+ *   Action::request('删除', 'DELETE', '/uuims/api/users/{id}')->confirm('确定删除 {username}？')->danger()
  *       ->hiddenWhen('is_super', 'in', [true, 1])
  *
  * visibleWhen / hiddenWhen are evaluated by the client against the current row (rowActions) or the

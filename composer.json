@@ -3,13 +3,13 @@
     "description": "loong-swoole server-driven UI: PHP page builders (dashboard / form / table / detail / custom) that emit a versioned page-description JSON for Flutter (PC) and uni-app (H5 / App / mini program) renderers; renderer-neutral charts (fl_chart / uCharts), per-platform trimming, #[AsPage] registry, permission and field-policy extension points",
     "type": "library",
     "license": "MIT",
-    "keywords": ["server-driven-ui", "low-code", "admin", "page-builder", "json-schema", "chart", "flutter", "uni-app", "swoole", "loongs"],
+    "keywords": ["server-driven-ui", "low-code", "uuims", "page-builder", "json-schema", "chart", "flutter", "uni-app", "swoole", "loongs"],
     "require": {
         "php": "^8.4",
         "ext-json": "*"
     },
     "suggest": {
-        "loongs/framework": "Serve GET /admin/api/pages/{page} from a loong-swoole app (host-side wiring; a framework bridge is planned)",
+        "loongs/framework": "Serve GET /uuims/api/pages/{page} from a loong-swoole app (host-side wiring; a framework bridge is planned)",
         "loongs/cache": "Cache rendered descriptions under Http\\CacheKey (code + platform + permission fingerprint + page version)",
         "loongs/language": "Translate page descriptions per client locale (Loongs\\Language\\Integration\\Render\\RenderTranslator implements Contract\\Translator)"
     },

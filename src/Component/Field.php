@@ -16,8 +16,8 @@ use Loongs\Render\Support\Placeholder;
  * Form / search field (RENDER.md §5.2, input components of §7).
  *
  *   Field::text('mobile', '手机号')->required()->regex('^1\d{10}$', '手机号格式不正确')->props(['maxLength' => 11])
- *   Field::select('status', '状态')->options(AdminStatus::class)
- *   Field::select('role_ids', '角色')->multiple()->optionsApi('/admin/api/roles/options')
+ *   Field::select('status', '状态')->options(UuimsStatus::class)
+ *   Field::select('role_ids', '角色')->multiple()->optionsApi('/uuims/api/roles/options')
  */
 final class Field extends Node
 {
