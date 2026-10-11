@@ -3,7 +3,18 @@
     "description": "loong-swoole server-driven UI: PHP page builders (dashboard / form / table / detail / custom) that emit a versioned page-description JSON for Flutter (PC) and uni-app (H5 / App / mini program) renderers; renderer-neutral charts (fl_chart / uCharts), per-platform trimming, #[AsPage] registry, permission and field-policy extension points",
     "type": "library",
     "license": "MIT",
-    "keywords": ["server-driven-ui", "low-code", "uuims", "page-builder", "json-schema", "chart", "flutter", "uni-app", "swoole", "loongs"],
+    "keywords": [
+        "server-driven-ui",
+        "low-code",
+        "uuims",
+        "page-builder",
+        "json-schema",
+        "chart",
+        "flutter",
+        "uni-app",
+        "swoole",
+        "loongs"
+    ],
     "require": {
         "php": "^8.4",
         "ext-json": "*"
@@ -23,10 +34,9 @@
             "Fixture\\": "tests/fixtures/"
         }
     },
-    "bin": ["bin/render-schema"],
-    "scripts": {
-        "test": "php tests/render_test.php"
-    },
+    "bin": [
+        "bin/render-schema"
+    ],
     "minimum-stability": "dev",
     "prefer-stable": true
 }
